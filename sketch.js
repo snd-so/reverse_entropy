@@ -1,10 +1,11 @@
 // differentf layout with the coords in columns.
 // and links
 
+// 250207 -- issues with jump in the playlist() function
 
 var shapie;
 var coords = [];
-var c;
+let c;
 var mx = 145;
 var my = 150;
 var take = 0;
@@ -34,13 +35,7 @@ function preload() { // for sounds / images that need time before playing
 
 function setup() {
   
-  // song = loadSound('sounds/rec.mp3');
-  // song1 = loadSound('sounds/BEAPS.mp3');
-  // song2 = loadSound('sounds/CAN2.mp3');
-  // song3 = loadSound('sounds/noise2.mp3');
-  // song4 = loadSound('sounds/cheby.mp3');
-  // song5 = loadSound('sounds/bees.mp3');
-
+  
   env = new p5.Env();
   env.setADSR(2.0, 5.0, 0.7, 10); //attacktime,decaytime,suspercent,releaseTime
   env.setRange(0.5, 0); //attaack level, release level
@@ -73,38 +68,45 @@ function setup() {
   centerCanvas();
   background(255);
 
+   // Unlock audio context on user interaction
+  userStartAudio();
 
-  shapie = new Shapie(TRIANGLE_FAN, 145, 150);
+  shapie = new Shapie(TRIANGLE_STRIP, 145, 150);
 
 }
 
 // ------------------------------------------------------------------------------------
+
 function draw() {
-  background(255); // Comment this out to see if shapes persist
-  
-  song.playMode('sustain');
-  song1.playMode('sustain');
-  song2.playMode('sustain');
+
+  // duration2 = song2.duration(); // tried this in setup didn't work, why?
+  song.playMode('sustain'); // or sustain / restart
+  song1.playMode('sustain'); // or sustain / restart
+  song2.playMode('sustain'); // or sustain / restart
+  song3.playMode('sustain'); // or sustain / restart
+  song4.playMode('sustain'); // or sustain / restart
+  song5.playMode('sustain'); // or sustain / restart
+
+  background(255); // spent forever trying to figure out shapes not refreshing, didnt have background
 
   shapie.update();
   shapie.display();
 
-  console.log(coords.length); // Debugging line to see how many shapes exist
+//   for (var i = coords.length - 1; i >= 0; i--) {
+//     coords[i].update();
+//     coords[i].display();
+//     if (coords[i].lifespan2 < 0) { //had changed the name of lifespan, watch that 
+//       coords.splice(i, 1);
 
-  for (var i = coords.length - 1; i >= 0; i--) {
-    coords[i].update();
-    coords[i].display();
-    if (coords[i].lifespan2 < 0) {
-      coords.splice(i, 1);
-    }
-  }
+//     }
+//   }
 }
 
 // ------------------------------------------------------------------------------------
 
 function centerCanvas() {
-  var x = (windowWidth - width) / 2;
-  var y = (windowHeight - height) / 2;
+  let x = (windowWidth - width) / 2;
+  let y = (windowHeight - height) / 2;
   cnv.position(x, y);
 }
 
@@ -113,6 +115,12 @@ function windowResized() {
 }
 
 // ------------------------------------------------------------------------------------
+
+// Unlock audio on first touch/click
+function touchStarted() {
+  getAudioContext().resume();
+}
+
 
 var Shapie = function(kind, mx, my) {
 
@@ -131,7 +139,7 @@ var Shapie = function(kind, mx, my) {
 
   for (var i = 0; i < 10; i++) {
     var choose = random(15);
-    if (choose < 5) {
+    if (choose < 7) {
       listpoints[i] = floor(random(300));
     }
 
@@ -159,8 +167,10 @@ var Shapie = function(kind, mx, my) {
     strokeWeight(1.5);
     ellipse(listpoints[spot3] + this.mx, listpoints2[spot3] + this.my, 6);
 
+    
     stroke(111);
-    strokeWeight(1);
+   strokeWeight(1);
+    fill(255);
     beginShape(this.shapee);
     vertex(listpoints[0] + this.mx, listpoints2[0] + this.my);
     vertex(listpoints[1] + this.mx, listpoints2[1] + this.my);
@@ -201,7 +211,7 @@ var Shapie = function(kind, mx, my) {
       this.take = true;
 
       this.shuffle();
-      this.playlist2();
+      this.playlist();
       this.coords();
     }
   }
@@ -239,12 +249,12 @@ var Shapie = function(kind, mx, my) {
       adder = -30;
     }
 
-    c = new Coordinates(125 + this.my + ((windowWidth - width) / 2), this.my + ((windowHeight - height) / 2) + adder, diftc, link);
-    coords.push(c);
-    print(chooser);
-  }
+   c = new Coordinates(125 + this.my + ((windowWidth - width) / 2), this.my + ((windowHeight - height) / 2) + adder, diftc, link);
+   // coords.push(c);
+  //  print(chooser);
+ }
 
-  // ------------------------------------------------------------------------------------
+  // ----------------------------------------------------------------------------
 
   this.shuffle = function() {
 
@@ -252,11 +262,11 @@ var Shapie = function(kind, mx, my) {
     for (var i = 0; i < 10; i++) {
       var choose = random(15);
       if (choose < 7) {
-        listpoints[i] = floor(random(300));
+        listpoints[i] = floor(random(350));
       }
 
       if (choose > 7) {
-        listpoints2[i] = floor(random(300));
+        listpoints2[i] = floor(random(350));
       }
     }
   }
@@ -280,7 +290,8 @@ var Shapie = function(kind, mx, my) {
       env.play();
     }
     if (chooser === 2) {
-      song3.jump(jumper3, 22);
+     // song3.jump(jumper3, 22);
+      song3.play();
       env3.play();
     }
     // song.jump(jumper, 7); // with the jump function, play function isn't needed
@@ -294,18 +305,23 @@ var Shapie = function(kind, mx, my) {
     duration5 = song5.duration(); // tried this in setup didn't work, why?
     var jumper5 = constrain(random(duration5), 0, (duration5) - 29);
 
-    var chooser2 = floor(random(2));
+    var chooser2 = floor(random(3));
     if (chooser2 === 0) {
 
-      song1.jump(jumper1, 11); // with the jump function, play function isn't needed // doesnt need the length?
-      // song2.play();
+      //song1.jump(jumper1, 11); // with the jump function, play function isn't needed // doesnt need the length?
+      song2.play();
       env1.play();
     }
     if (chooser2 === 1) {
 
-      song5.jump(jumper5, 22); // with the jump function, play function isn't needed
-      // song5.play();
+      //song5.jump(jumper5, 22); // with the jump function, play function isn't needed
+      song5.play();
       env4.play();
+    }
+     if (chooser === 2) {
+     // song3.jump(jumper3, 22);
+      song4.play();
+      env2.play();
     }
   }
 
@@ -323,9 +339,40 @@ var Shapie = function(kind, mx, my) {
     env2.play();
 
   }
+  
+  function Coordinates(x, y, diftc, link) {
+  
+  this.x = x;
+  this.y = y;
+  this.diftc = diftc;
+  this.link = link;
+  this.txtt = createA(this.link, this.diftc); //
+  this.lifespan2 = 1;
+
+  this.display = function() {
+
+    this.txtt.class("fuck"); // cool created a css .fuck // then added safari code in html
+    this.txtt.style("opacity", this.lifespan); // can't figure out how to run fct in mouseover
+    this.txtt.position(this.x, this.y);
+    // this.lifespan += -0.1;
+
+  }
+
+  this.update = function() {
+    this.txtt.style("opacity", this.lifespan2); // can't figure out how to run fct in mouseover
+    this.lifespan2 = this.lifespan2 - 0.007; // -0.01 doesnt seem to leave the shadows 
+    if(this.lifespan2 <= 0) {
+      this.txtt.remove(); // this got rid of object that was transparent but still 'clickable'
+    }
+  }
 }
+
+// fade out wasnt working, just increased in opacity .. had txtt.createA('#', this.diftc);
+// needed to add this.txtt.createA..-- in order for the fade (lifespan to work)
+
 
 // make text instead of links
 // whats going on with the shadow from the text
 // make actual links for people to click on
 //
+}
