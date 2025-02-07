@@ -79,25 +79,23 @@ function setup() {
 }
 
 // ------------------------------------------------------------------------------------
-
 function draw() {
-
-  // duration2 = song2.duration(); // tried this in setup didn't work, why?
-  song.playMode('sustain'); // or sustain / restart
-  song1.playMode('sustain'); // or sustain / restart
-  song2.playMode('sustain'); // or sustain / restart
-
-  background(255); // spent forever trying to figure out shapes not refreshing, didnt have background
+  background(255); // Comment this out to see if shapes persist
+  
+  song.playMode('sustain');
+  song1.playMode('sustain');
+  song2.playMode('sustain');
 
   shapie.update();
   shapie.display();
 
+  console.log(coords.length); // Debugging line to see how many shapes exist
+
   for (var i = coords.length - 1; i >= 0; i--) {
     coords[i].update();
     coords[i].display();
-    if (coords[i].lifespan2 < 0) { //had changed the name of lifespan, watch that 
+    if (coords[i].lifespan2 < 0) {
       coords.splice(i, 1);
-
     }
   }
 }
