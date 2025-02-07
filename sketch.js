@@ -155,17 +155,17 @@ var Shapie = function(kind, mx, my) {
 
     stroke(0, 77, 111);
     strokeWeight(1.5);
-    ellipse(listpoints[spot] + this.mx, listpoints2[spot] + this.my, 6);
+    ellipse(listpoints[spot] + this.mx, listpoints2[spot] + this.my, 14);
 
 
     stroke(255, 111, 0);
     strokeWeight(1.5);
-    ellipse(listpoints[spot2] + this.mx, listpoints2[spot2] + this.my, 6);
+    ellipse(listpoints[spot2] + this.mx, listpoints2[spot2] + this.my, 14);
 
 
     stroke(255, 55, 0);
     strokeWeight(1.5);
-    ellipse(listpoints[spot3] + this.mx, listpoints2[spot3] + this.my, 6);
+    ellipse(listpoints[spot3] + this.mx, listpoints2[spot3] + this.my, 14);
 
     
     stroke(111);
