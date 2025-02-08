@@ -6,8 +6,8 @@
 var shapie;
 var coords = [];
 let c;
-var mx = 145;
-var my = 150;
+var mx;
+var my;
 var take = 0;
 var kind;
 var cnv;
@@ -66,8 +66,8 @@ function setup() {
   song4.amp(env);
   song5.amp(env4);
 
-  createCanvas(600 * scaleFactor, 600 * scaleFactor);
-  cnv = createCanvas(600 * scaleFactor, 600 * scaleFactor);
+  let canvasSize = min(windowWidth, windowHeight) * 0.9 * scaleFactor;  // Scale dynamically
+  cnv = createCanvas(canvasSize, canvasSize);
   centerCanvas();
   background(255);
 
@@ -75,7 +75,7 @@ function setup() {
   userStartAudio();
   getAudioContext().resume(); // Make sure audio context is running
 
-  shapie = new Shapie(TRIANGLE_STRIP, 145 * scaleFactor, 150 * scaleFactor);
+  shapie = new Shapie(TRIANGLE_STRIP, (windowWidth - (width / scaleFactor)) / 2, (windowHeight - (height / scaleFactor)) / 2);
 
 }
 
@@ -132,7 +132,7 @@ function isIOS() {
 
 
 var Shapie = function(kind, mx, my) {
-
+  let scaleFactor = isIOS() ? 2 : 1;  // Match the scaling   factor from setup()
   this.shapee = kind;
   this.mx = mx;
   this.my = my;
@@ -149,11 +149,11 @@ var Shapie = function(kind, mx, my) {
   for (var i = 0; i < 10; i++) {
     var choose = random(15);
     if (choose < 7) {
-      listpoints[i] = floor(random(300));
+      listpoints[i] = floor(random(width * 0.5)); 
     }
 
     if (choose > 7) {
-      listpoints2[i] = floor(random(300));
+      listpoints2[i] = floor(random(height * 0.5)); 
     }
   }
 
@@ -165,20 +165,20 @@ var Shapie = function(kind, mx, my) {
 
  stroke(0, 77, 111);
   strokeWeight(1.5 * scaleFactor);
-  ellipse((listpoints[spot] + this.mx) * scaleFactor, 
-          (listpoints2[spot] + this.my) * scaleFactor, 
+  ellipse(listpoints[spot] * scaleFactor, 
+          listpoints2[spot] * scaleFactor, 
           14 * scaleFactor);
 
   stroke(255, 111, 0);
   strokeWeight(1.5 * scaleFactor);
-  ellipse((listpoints[spot2] + this.mx) * scaleFactor, 
-          (listpoints2[spot2] + this.my) * scaleFactor, 
+  ellipse(listpoints[spot2]  * scaleFactor, 
+          listpoints2[spot2]* scaleFactor, 
           14 * scaleFactor);
 
   stroke(255, 55, 0);
   strokeWeight(1.5 * scaleFactor);
-  ellipse((listpoints[spot3] + this.mx) * scaleFactor, 
-          (listpoints2[spot3] + this.my) * scaleFactor, 
+  ellipse(listpoints[spot3] * scaleFactor, 
+          listpoints2[spot3] * scaleFactor, 
           14 * scaleFactor);
 
 
@@ -188,7 +188,7 @@ var Shapie = function(kind, mx, my) {
     fill(255);
     beginShape(this.shapee);
 for (let i = 0; i < 10; i++) {
-  vertex((listpoints[i] + this.mx) * scaleFactor, (listpoints2[i] + this.my) * scaleFactor);
+  vertex((listpoints[i] ) * scaleFactor, (listpoints2[i] ) * scaleFactor);
 }
 endShape();
   }
@@ -198,7 +198,7 @@ endShape();
   this.update = function() {
 
 
-    if (dist(mouseX, mouseY, listpoints[spot] + this.mx, listpoints2[spot] + this.my) < 6) {
+    if (dist(mouseX, mouseY, listpoints[spot], listpoints2[spot]) < 6) {
       this.take = true;
       this.shuffle();
       this.playlist();
@@ -206,14 +206,14 @@ endShape();
     }
 
 
-    if (dist(mouseX, mouseY, listpoints[spot2] + this.mx, listpoints2[spot2] + this.my) < 6) {
+    if (dist(mouseX, mouseY, listpoints[spot2], listpoints2[spot2]) < 6) {
       this.take = true;
       this.shuffle();
       this.playlist1();
       this.coords();
     }
 
-    if (dist(mouseX, mouseY, listpoints[spot3] + this.mx, listpoints2[spot3] + this.my) < 6) {
+    if (dist(mouseX, mouseY, listpoints[spot3], listpoints2[spot3]) < 6) {
       this.take = true;
 
       this.shuffle();
