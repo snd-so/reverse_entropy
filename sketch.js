@@ -109,8 +109,9 @@ function draw() {
 // ------------------------------------------------------------------------------------
 
 function centerCanvas() {
-  let x = (windowWidth - width) / 2;
-  let y = (windowHeight - height) / 2;
+let scaleFactor = isIOS() ? 2 : 1;  // Match the scaling factor from setup()
+  let x = (windowWidth - (width / scaleFactor)) / 2;
+  let y = (windowHeight - (height / scaleFactor)) / 2;
   cnv.position(x, y);
 }
 
@@ -186,20 +187,11 @@ var Shapie = function(kind, mx, my) {
    strokeWeight(1 * scaleFactor);
     fill(255);
     beginShape(this.shapee);
-    vertex(listpoints[0] + this.mx, listpoints2[0] + this.my);
-    vertex(listpoints[1] + this.mx, listpoints2[1] + this.my);
-    vertex(listpoints[2] + this.mx, listpoints2[2] + this.my);
-    vertex(listpoints[3] + this.mx, listpoints2[3] + this.my);
-    vertex(listpoints[4] + this.mx, listpoints2[4] + this.my);
-    vertex(listpoints[5] + this.mx, listpoints2[5] + this.my);
-    vertex(listpoints[6] + this.mx, listpoints2[6] + this.my);
-    vertex(listpoints[7] + this.mx, listpoints2[7] + this.my);
-    vertex(listpoints[8] + this.mx, listpoints2[8] + this.my);
-    vertex(listpoints[9] + this.mx, listpoints2[9] + this.my);
-    endShape();
-
+for (let i = 0; i < 10; i++) {
+  vertex((listpoints[i] + this.mx) * scaleFactor, (listpoints2[i] + this.my) * scaleFactor);
+}
+endShape();
   }
-
   // ------------------------------------------------------------------------------------
 
 
