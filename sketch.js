@@ -198,7 +198,7 @@ endShape();
   this.update = function() {
 
 
-    if (dist(mouseX, mouseY, listpoints[spot], listpoints2[spot]) < 6) {
+    if (dist(mouseX, mouseY, listpoints[spot], listpoints2[spot]) < 30) {
       this.take = true;
       this.shuffle();
       this.playlist();
@@ -206,14 +206,14 @@ endShape();
     }
 
 
-    if (dist(mouseX, mouseY, listpoints[spot2], listpoints2[spot2]) < 6) {
+    if (dist(mouseX, mouseY, listpoints[spot2], listpoints2[spot2]) < 30) {
       this.take = true;
       this.shuffle();
       this.playlist1();
       this.coords();
     }
 
-    if (dist(mouseX, mouseY, listpoints[spot3], listpoints2[spot3]) < 6) {
+    if (dist(mouseX, mouseY, listpoints[spot3], listpoints2[spot3]) < 30) {
       this.take = true;
 
       this.shuffle();
