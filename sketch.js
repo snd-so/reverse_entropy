@@ -70,6 +70,7 @@ function setup() {
 
    // Unlock audio context on user interaction
   userStartAudio();
+  getAudioContext().resume(); // Make sure audio context is running
 
   shapie = new Shapie(TRIANGLE_STRIP, 145, 150);
 
