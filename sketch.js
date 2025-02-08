@@ -121,9 +121,8 @@ function windowResized() {
 
 // ------------------------------------------------------------------------------------
 
-// Unlock audio on first touch/click
 function touchStarted() {
-  getAudioContext().resume();
+  shapie.checkTouch(touchX, touchY);
 }
 
 function isIOS() {
@@ -158,6 +157,16 @@ var Shapie = function(kind, mx, my) {
   }
 
   // ------------------------------------------------------------------------------------
+  
+  this.checkTouch = function(x, y) {
+  if (dist(x, y, listpoints[spot] + this.mx, listpoints2[spot] + this.my) < 20) {
+    this.take = true;
+    this.shuffle();
+    this.playlist();
+    this.coords();
+  }
+};
+
 
   this.display = function() {
 
