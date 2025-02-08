@@ -35,6 +35,9 @@ function preload() { // for sounds / images that need time before playing
 
 function setup() {
   
+  let scaleFactor = isIOS() ? 2 : 1;  // Increase scale factor for iOS
+  pixelDensity(isIOS() ? 2 : 1); // Boost pixel density on iOS
+  
   
   env = new p5.Env();
   env.setADSR(2.0, 5.0, 0.7, 10); //attacktime,decaytime,suspercent,releaseTime
@@ -63,8 +66,8 @@ function setup() {
   song4.amp(env);
   song5.amp(env4);
 
-  createCanvas(600, 600);
-  cnv = createCanvas(600, 600);
+  createCanvas(600 * scaleFactor, 600 * scaleFactor);
+  cnv = createCanvas(600 * scaleFactor, 600 * scaleFactor);
   centerCanvas();
   background(255);
 
@@ -72,7 +75,7 @@ function setup() {
   userStartAudio();
   getAudioContext().resume(); // Make sure audio context is running
 
-  shapie = new Shapie(TRIANGLE_STRIP, 145, 150);
+  shapie = new Shapie(TRIANGLE_STRIP, 145 * scaleFactor, 150 * scaleFactor);
 
 }
 
@@ -122,6 +125,10 @@ function touchStarted() {
   getAudioContext().resume();
 }
 
+function isIOS() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+}
+
 
 var Shapie = function(kind, mx, my) {
 
@@ -153,24 +160,30 @@ var Shapie = function(kind, mx, my) {
 
   this.display = function() {
 
+    let scaleFactor = isIOS() ? 2 : 1;
 
-    stroke(0, 77, 111);
-    strokeWeight(1.5);
-    ellipse(listpoints[spot] + this.mx, listpoints2[spot] + this.my, 14);
+ stroke(0, 77, 111);
+  strokeWeight(1.5 * scaleFactor);
+  ellipse((listpoints[spot] + this.mx) * scaleFactor, 
+          (listpoints2[spot] + this.my) * scaleFactor, 
+          14 * scaleFactor);
 
+  stroke(255, 111, 0);
+  strokeWeight(1.5 * scaleFactor);
+  ellipse((listpoints[spot2] + this.mx) * scaleFactor, 
+          (listpoints2[spot2] + this.my) * scaleFactor, 
+          14 * scaleFactor);
 
-    stroke(255, 111, 0);
-    strokeWeight(1.5);
-    ellipse(listpoints[spot2] + this.mx, listpoints2[spot2] + this.my, 14);
+  stroke(255, 55, 0);
+  strokeWeight(1.5 * scaleFactor);
+  ellipse((listpoints[spot3] + this.mx) * scaleFactor, 
+          (listpoints2[spot3] + this.my) * scaleFactor, 
+          14 * scaleFactor);
 
-
-    stroke(255, 55, 0);
-    strokeWeight(1.5);
-    ellipse(listpoints[spot3] + this.mx, listpoints2[spot3] + this.my, 14);
 
     
     stroke(111);
-   strokeWeight(1);
+   strokeWeight(1 * scaleFactor);
     fill(255);
     beginShape(this.shapee);
     vertex(listpoints[0] + this.mx, listpoints2[0] + this.my);
