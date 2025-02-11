@@ -1,421 +1,290 @@
-// differentf layout with the coords in columns.
-// and links
+// Optimized version with performance improvements and better responsiveness
+let shapie;
+let song, song1, song2, song3, song4, song5;
+let env, env1, env2, env3, env4;
+let chooser = 1;
+let cnv;
 
-// 250207 -- issues with jump in the playlist() function
-
-var shapie;
-var coords = [];
-let c;
-var mx;
-var my;
-var take = 0;
-var kind;
-var cnv;
-var song, song1, song2;
-var diftc;
-var listpoints, listpoints2;
-var env, env1, env2;
-var chooser = 1;
-var adder;
-
-// ------------------------------------------------------------------------------------
+// Cache DOM queries and window checks
+const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+const scaleFactor = isIOSDevice ? 2 : 1;
 
 function preload() {
-  // for sounds / images that need time before playing
-
-  song = loadSound("sounds/rec.mp3");
-  song1 = loadSound("sounds/BEAPS.mp3");
-  song2 = loadSound("sounds/CAN2.mp3");
-  song3 = loadSound("sounds/noise2.mp3");
-  song4 = loadSound("sounds/cheby.mp3");
-  song5 = loadSound("sounds/bees.mp3");
+  // Load sounds in parallel
+  const sounds = [
+    "sounds/rec.mp3",
+    "sounds/BEAPS.mp3",
+    "sounds/CAN2.mp3",
+    "sounds/noise2.mp3",
+    "sounds/cheby.mp3",
+    "sounds/bees.mp3"
+  ];
+  
+  [song, song1, song2, song3, song4, song5] = sounds.map(s => loadSound(s));
 }
 
-// ------------------------------------------------------------------------------------
+function setupEnvelopes() {
+  // Create envelopes with optimized parameters
+  const envSettings = [
+    { adsr: [2.0, 5.0, 0.7, 10], range: [0.5, 0] },
+    { adsr: [0.5, 1.0, 0.9, 7], range: [0.3, 0] },
+    { adsr: [0.01, 0.3, 0.8, 2.9], range: [0.95, 0] },
+    { adsr: [3.0, 7.0, 0.3, 8], range: [0.7, 0] },
+    { adsr: [0.5, 4.0, 0.9, 15], range: [0.8, 0] }
+  ];
+
+  return envSettings.map(settings => {
+    const env = new p5.Env();
+    env.setADSR(...settings.adsr);
+    env.setRange(...settings.range);
+    return env;
+  });
+}
 
 function setup() {
-  let scaleFactor = isIOS() ? 2 : 1; // Increase scale factor for iOS
-  pixelDensity(isIOS() ? 2 : 1); // Boost pixel density on iOS
+  pixelDensity(scaleFactor);
+  
+  [env, env1, env2, env3, env4] = setupEnvelopes();
+  
+  [song, song1, song2, song3, song4, song5].forEach((s, i) => {
+    s.amp(i < 2 ? env : [env1, env2, env3, env4][i-2]);
+  });
 
-  env = new p5.Env();
-  env.setADSR(2.0, 5.0, 0.7, 10); //attacktime,decaytime,suspercent,releaseTime
-  env.setRange(0.5, 0); //attaack level, release level
-
-  env1 = new p5.Env();
-  env1.setADSR(0.5, 1.0, 0.9, 7); //attacktime,decaytime,suspercent,releaseTime
-  env1.setRange(0.3, 0); //attaack level, release level
-
-  env2 = new p5.Env();
-  env2.setADSR(0.01, 0.3, 0.8, 2.9); //attacktime,decaytime,suspercent,releaseTime
-  env2.setRange(0.95, 0); //attaack level, release level
-
-  env3 = new p5.Env();
-  env3.setADSR(3.0, 7.0, 0.3, 8); //attacktime,decaytime,suspercent,releaseTime
-  env3.setRange(0.7, 0); //attaack level, release level
-
-  env4 = new p5.Env();
-  env4.setADSR(0.5, 4.0, 0.9, 15); //attacktime,decaytime,suspercent,releaseTime
-  env4.setRange(0.8, 0); //attaack level, release level
-
-  song.amp(env);
-  song1.amp(env1);
-  song2.amp(env2);
-  song3.amp(env3);
-  song4.amp(env);
-  song5.amp(env4);
-
-  let canvasSize = min(windowWidth, windowHeight) * 0.9 * scaleFactor; // Scale dynamically
+  const canvasSize = calculateCanvasSize();
   cnv = createCanvas(canvasSize, canvasSize);
   centerCanvas();
-  background(255);
-
-  // Unlock audio context on user interaction
+  
   userStartAudio();
-  getAudioContext().resume(); // Make sure audio context is running
-
-  shapie = new Shapie(
-    TRIANGLE_STRIP,
-    (windowWidth - width / scaleFactor) / 2,
-    (windowHeight - height / scaleFactor) / 2
-  );
+  getAudioContext().resume();
+  
+  shapie = new Shapie(TRIANGLE_STRIP);
 }
 
-// ------------------------------------------------------------------------------------
-
-function draw() {
-  // duration2 = song2.duration(); // tried this in setup didn't work, why?
-  song.playMode("sustain"); // or sustain / restart
-  song1.playMode("sustain"); // or sustain / restart
-  song2.playMode("sustain"); // or sustain / restart
-  song3.playMode("sustain"); // or sustain / restart
-  song4.playMode("sustain"); // or sustain / restart
-  song5.playMode("sustain"); // or sustain / restart
-
-  background(255); // spent forever trying to figure out shapes not refreshing, didnt have background
-
-  shapie.update();
-  shapie.display();
-  centerCanvas();
-
-  //   for (var i = coords.length - 1; i >= 0; i--) {
-  //     coords[i].update();
-  //     coords[i].display();
-  //     if (coords[i].lifespan2 < 0) { //had changed the name of lifespan, watch that
-  //       coords.splice(i, 1);
-
-  //     }
-  //   }
+function calculateCanvasSize() {
+  const smallerDimension = min(windowWidth, windowHeight);
+  return smallerDimension * 0.9 * scaleFactor;
 }
-
-// ------------------------------------------------------------------------------------
 
 function centerCanvas() {
-  let scaleFactor = isIOS() ? 2 : 1; // Match the scaling factor from setup()
-  let x = (windowWidth - width / scaleFactor) / 2;
-  let y = (windowHeight - height / scaleFactor) / 2;
+  const x = (windowWidth - width / scaleFactor) / 2;
+  const y = (windowHeight - height / scaleFactor) / 2;
   cnv.position(x, y);
 }
 
-function windowResized() {
-  centerCanvas();
+function draw() {
+  if (!frameCount || frameCount % 2 !== 0) return;
+  
+  background(255);
+  shapie.update();
+  shapie.display();
 }
 
-// ------------------------------------------------------------------------------------
-
-function touchStarted() {
-  shapie.checkTouch(touchX, touchY);
-}
-
-function isIOS() {
-  return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-}
-
-var Shapie = function (kind, mx, my) {
-  let scaleFactor = isIOS() ? 2 : 1; // Match the scaling   factor from setup()
+function Shapie(kind) {
+  // Initialize properties
   this.shapee = kind;
+  this.take = false;
   this.mx = width / 2;
   this.my = height / 2;
-  this.take = false;
+  this.listpoints = [];
+  this.listpoints2 = [];
+  this.spots = [];
 
-  var listpoints = [
-    this.mx + 30,
-    this.mx + 40,
-    this.mx + 50,
-    this.mx + 60,
-    this.mx + 70,
-    this.mx + 22,
-    this.mx + 90,
-    this.mx + 100,
-    this.mx + 66,
-    this.mx + 77,
-  ];
+  // Define all methods first
+  this.initializePoints = function() {
+    const w = width;
+    const h = height;
+    this.listpoints = Array.from({length: 10}, () => random(w * 0.25, w * 0.75));
+    this.listpoints2 = Array.from({length: 10}, () => random(h * 0.25, h * 0.75));
+    this.spots = Array.from({length: 3}, () => floor(random(10)));
+  };
 
-  var listpoints2 = [
-    this.my + 75,
-    this.my + 20,
-    this.my + 75,
-    this.my + 20,
-    this.my + 75,
-    this.my + 20,
-    this.my + 75,
-    this.my + 20,
-    this.my + 75,
-    this.my + 20,
-  ];
-  
-  var spot = floor(random(10));
-  var spot2 = floor(random(10));
-  var spot3 = floor(random(10));
-
-  for (var i = 0; i < 10; i++) {
-    var choose = random(15);
-    if (choose < 7) {
-      listpoints[i] = floor(random(width * 0.5)) + width * 0.25;
-    }
-
-    if (choose > 7) {
-      listpoints2[i] = floor(random(height * 0.5)) + height * 0.25;
-    }
-  }
-
-  // ------------------------------------------------------------------------------------
-
-  this.checkTouch = function (x, y) {
-    if (
-      dist(x, y, listpoints[spot] + this.mx, listpoints2[spot] + this.my) < 20
-    ) {
-      this.take = true;
-      this.shuffle();
-      this.playlist();
-      this.coords();
+  this.update = function() {
+    for (let i = 0; i < 3; i++) {
+      if (dist(mouseX, mouseY, this.listpoints[this.spots[i]], this.listpoints2[this.spots[i]]) < 30 * scaleFactor) {
+        this.handleInteraction(i);
+        break;
+      }
     }
   };
 
-  this.display = function () {
-    let scaleFactor = isIOS() ? 2 : 1;
+  this.checkTouch = function(x, y) {
+    const touchSpot = this.listpoints[this.spots[0]];
+    const touchSpot2 = this.listpoints2[this.spots[0]];
+    
+    if (dist(x, y, touchSpot, touchSpot2) < 20 * scaleFactor) {
+      this.handleInteraction(0);
+    }
+  };
 
-    stroke(0, 77, 111);
-    strokeWeight(1.5 * scaleFactor);
-    ellipse(
-      listpoints[spot] * scaleFactor,
-      listpoints2[spot] * scaleFactor,
-      14 * scaleFactor
-    );
+  this.handleInteraction = function(spotIndex) {
+    this.take = true;
+    this.shuffle();
+    if (spotIndex === 1) {
+      this.playlist1();
+    } else {
+      this.playlist();
+    }
+    if (!this.updateTimeout) {
+      this.updateTimeout = setTimeout(() => {
+        this.coords();
+        this.updateTimeout = null;
+      }, 100);
+    }
+  };
 
-    stroke(255, 111, 0);
-    strokeWeight(1.5 * scaleFactor);
-    ellipse(
-      listpoints[spot2] * scaleFactor,
-      listpoints2[spot2] * scaleFactor,
-      14 * scaleFactor
-    );
+  this.display = function() {
+    this.drawPoints();
+    this.drawShape();
+  };
 
-    stroke(255, 55, 0);
-    strokeWeight(1.5 * scaleFactor);
-    ellipse(
-      listpoints[spot3] * scaleFactor,
-      listpoints2[spot3] * scaleFactor,
-      14 * scaleFactor
-    );
+  this.drawPoints = function() {
+    const colors = [[0, 77, 111], [255, 111, 0], [255, 55, 0]];
+    
+    colors.forEach((color, i) => {
+      stroke(...color);
+      strokeWeight(1.5 * scaleFactor);
+      ellipse(
+        this.listpoints[this.spots[i]] * scaleFactor,
+        this.listpoints2[this.spots[i]] * scaleFactor,
+        14 * scaleFactor
+      );
+    });
+  };
 
+  this.drawShape = function() {
     stroke(111);
-    strokeWeight(1 * scaleFactor);
+    strokeWeight(scaleFactor);
     fill(255);
     beginShape(this.shapee);
     for (let i = 0; i < 10; i++) {
-      vertex(listpoints[i] * scaleFactor, listpoints2[i] * scaleFactor);
+      vertex(
+        this.listpoints[i] * scaleFactor,
+        this.listpoints2[i] * scaleFactor
+      );
     }
     endShape();
   };
-  // ------------------------------------------------------------------------------------
 
-  this.update = function () {
-    if (dist(mouseX, mouseY, listpoints[spot], listpoints2[spot]) < 30) {
-      this.take = true;
-      this.shuffle();
-      this.playlist();
-      this.coords();
-    }
-
-    if (dist(mouseX, mouseY, listpoints[spot2], listpoints2[spot2]) < 30) {
-      this.take = true;
-      this.shuffle();
-      this.playlist1();
-      this.coords();
-    }
-
-    if (dist(mouseX, mouseY, listpoints[spot3], listpoints2[spot3]) < 30) {
-      this.take = true;
-
-      this.shuffle();
-      this.playlist();
-      this.coords();
+  this.shuffle = function() {
+    const w = width;
+    const h = height;
+    for (let i = 0; i < 10; i++) {
+      if (random(15) < 7) {
+        this.listpoints[i] = random(w * 0.25, w * 0.75);
+      } else {
+        this.listpoints2[i] = random(h * 0.25, h * 0.75);
+      }
     }
   };
 
-  // ------------------------------------------------------------------------------------
+  this.playlist = function() {
+    const chooser = floor(random(3));
+    const songs = [song, song4, song3];
+    const envs = [env, env, env3];
+    songs[chooser].play();
+    envs[chooser].play();
+  };
 
-  this.coords = function () {
-    // this funciton is inside of the Shapie function but maybe should have been outside
+  this.playlist1 = function() {
+    const chooser2 = floor(random(3));
+    const songs = [song2, song5, song4];
+    const envs = [env1, env4, env2];
+    songs[chooser2].play();
+    envs[chooser2].play();
+  };
 
-    // var adder = (random(-40, -10));
-    // var chooser = floor(random(1, 4));
-    if (chooser == 4) {
+  this.coords = function() {
+    if (chooser === 4) {
       chooser = 1;
     } else {
       chooser++;
     }
 
-    if (chooser == 1) {
-      diftc = "";
-      link = "https://elevatorbath.bandcamp.com";
-      adder = 0;
-    }
-    if (chooser == 2) {
-      diftc = "";
-      link = "https://www.instagram.com/snonll/";
-      adder = -10;
-    }
-    if (chooser == 3) {
-      diftc = "";
-      link = "https://sssoneill.github.io/wohnklo/";
-      adder = -20;
-    }
-    if (chooser == 4) {
-      diftc = "";
-      link = "https://twitter.com/SeaanONeill";
-      adder = -30;
-    }
+    const linkData = {
+      1: { url: "https://elevatorbath.bandcamp.com", offset: 0 },
+      2: { url: "https://www.instagram.com/snonll/", offset: -10 },
+      3: { url: "https://sssoneill.github.io/wohnklo/", offset: -20 },
+      4: { url: "https://twitter.com/SeaanONeill", offset: -30 }
+    }[chooser];
 
-    c = new Coordinates(
+    // Create the Coordinates object
+    return new Coordinates(
       125 + this.my + (windowWidth - width) / 2,
-      this.my + (windowHeight - height) / 2 + adder,
-      diftc,
-      link
+      this.my + (windowHeight - height) / 2 + linkData.offset,
+      "",
+      linkData.url
     );
-    // coords.push(c);
-    //  print(chooser);
   };
 
-  // ----------------------------------------------------------------------------
+  // Initialize points after all methods are defined
+  this.initializePoints();
+}
 
-//   this.shuffle = function () {
-//     for (var i = 0; i < 10; i++) {
-//       var choose = random(15);
-//       if (choose < 7) {
-//         listpoints[i] = floor(random(350));
-//       }
+function windowResized() {
+  const canvasSize = calculateCanvasSize();
+  resizeCanvas(canvasSize, canvasSize);
+  centerCanvas();
+  if (shapie) {
+    shapie.initializePoints();
+  }
+}
 
-//       if (choose > 7) {
-//         listpoints2[i] = floor(random(350));
-//       }
-//     }
-//   };
+function touchStarted() {
+if (shapie && touches.length > 0) {
+    // Get the first touch point
+    const touch = touches[0];
+    // Pass the touch coordinates to checkTouch
+    shapie.checkTouch(touch.x, touch.y);
+  }
+  return false; // Prevent default behavior
+}
 
-    this.shuffle = function () {
-    for (var i = 0; i < 10; i++) {
-      var choose = random(15);
-      if (choose < 7) {
-        listpoints[i] = floor(random(width * 0.5)) + width * 0.25;
-      }
+// Add touchMoved to handle continuous touch interaction
+function touchMoved() {
+  if (shapie && touches.length > 0) {
+    const touch = touches[0];
+    shapie.checkTouch(touch.x, touch.y);
+  }
+  return false; // Prevent default behavior like scrolling
+}
 
-      if (choose > 7) {
-        listpoints2[i] = floor(random(height * 0.5)) + height * 0.25;
-      }
+// Optional: handle multiple touch points if needed
+function handleMultiTouch() {
+  if (shapie) {
+    for (let touch of touches) {
+      shapie.checkTouch(touch.x, touch.y);
     }
-  };
-  // ------------------------------------------------------------------------------------
-
-  this.playlist = function () {
-    duration = song.duration(); // tried this in setup didn't work, why?
-    var jumper = constrain(random(duration), 0, duration - 10);
-    duration3 = song3.duration(); // tried this in setup didn't work, why?
-    var jumper3 = constrain(random(duration3), 0, duration3 - 39);
-
-    var chooser = floor(random(3));
-    if (chooser === 0) {
-      song.play();
-      env.play();
-    }
-    if (chooser === 1) {
-      song4.play();
-      env.play();
-    }
-    if (chooser === 2) {
-      // song3.jump(jumper3, 22);
-      song3.play();
-      env3.play();
-    }
-    // song.jump(jumper, 7); // with the jump function, play function isn't needed
-  };
-
-  this.playlist1 = function () {
-    duration1 = song1.duration(); // tried this in setup didn't work, why?
-    var jumper1 = constrain(random(duration1), 0, duration1 - 25);
-    duration5 = song5.duration(); // tried this in setup didn't work, why?
-    var jumper5 = constrain(random(duration5), 0, duration5 - 29);
-
-    var chooser2 = floor(random(3));
-    if (chooser2 === 0) {
-      //song1.jump(jumper1, 11); // with the jump function, play function isn't needed // doesnt need the length?
-      song2.play();
-      env1.play();
-    }
-    if (chooser2 === 1) {
-      //song5.jump(jumper5, 22); // with the jump function, play function isn't needed
-      song5.play();
-      env4.play();
-    }
-    if (chooser === 2) {
-      // song3.jump(jumper3, 22);
-      song4.play();
-      env2.play();
-    }
-  };
-
-  this.playlist2 = function () {
-    duration2 = song2.duration(); // tried this in setup didn't work, why?
-    var jumper2 = constrain(random(duration2), 0, duration2 - 9); // removed the floor function to all
-
-    if (song2.isPlaying()) {
-      // .isPlaying() returns a boolean
-      // song.setVolume(0.9, 0.2);
-      // song2.stop();
-    }
-    song2.jump(jumper2, 4); // with the jump function, play function isn't needed
-    // song2.play();
-    env2.play();
-  };
-
-  function Coordinates(x, y, diftc, link) {
-    this.x = x;
-    this.y = y;
-    this.diftc = diftc;
-    this.link = link;
-    this.txtt = createA(this.link, this.diftc); //
-    this.lifespan2 = 1;
-
-    this.display = function () {
-      this.txtt.class("fuck"); // cool created a css .fuck // then added safari code in html
-      this.txtt.style("opacity", this.lifespan); // can't figure out how to run fct in mouseover
-      this.txtt.position(this.x, this.y);
-      // this.lifespan += -0.1;
-    };
-
-    this.update = function () {
-      this.txtt.style("opacity", this.lifespan2); // can't figure out how to run fct in mouseover
-      this.lifespan2 = this.lifespan2 - 0.007; // -0.01 doesnt seem to leave the shadows
-      if (this.lifespan2 <= 0) {
-        this.txtt.remove(); // this got rid of object that was transparent but still 'clickable'
-      }
-    };
   }
 
-  // fade out wasnt working, just increased in opacity .. had txtt.createA('#', this.diftc);
-  // needed to add this.txtt.createA..-- in order for the fade (lifespan to work)
+}
 
-  // make text instead of links
-  // whats going on with the shadow from the text
-  // make actual links for people to click on
-  //
-};
+// Debounced window resize handler
+let resizeTimeout;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimeout);
+  resizeTimeout = setTimeout(windowResized, 250);
+});
+
+function Coordinates(x, y, diftc, link) {
+  this.x = x;
+  this.y = y;
+  this.diftc = diftc;
+  this.link = link;
+  this.txtt = createA(this.link, this.diftc);
+  this.lifespan2 = 1;
+
+  this.txtt.class("fuck");
+  this.txtt.position(this.x, this.y);
+  
+  this.display = function() {
+    this.txtt.style("opacity", this.lifespan2);
+  };
+
+  this.update = function() {
+    this.txtt.style("opacity", this.lifespan2);
+    this.lifespan2 -= 0.007;
+    if (this.lifespan2 <= 0) {
+      this.txtt.remove();
+    }
+  };
+}
