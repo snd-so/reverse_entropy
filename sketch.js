@@ -95,6 +95,7 @@ function draw() {
 
   shapie.update();
   shapie.display();
+  centerCanvas();
 
   //   for (var i = coords.length - 1; i >= 0; i--) {
   //     coords[i].update();
